@@ -1,0 +1,252 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+.cal-wrap { padding: 1rem 0; }
+.month-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.month-tabs button {
+  font-family: var(--font-sans); font-size: 12px; padding: 5px 10px;
+  border: 1px solid var(--color-border-tertiary); border-radius: var(--border-radius-md);
+  background: var(--color-background-secondary); color: var(--color-text-secondary);
+  cursor: pointer; transition: all .15s;
+}
+.month-tabs button.active {
+  background: var(--color-background-primary); color: var(--color-text-primary);
+  border-color: var(--color-border-primary); font-weight: 500;
+}
+.month-header { margin-bottom: 12px; }
+.month-header h2 { font-size: 18px; font-weight: 500; color: var(--color-text-primary); }
+.month-header p { font-size: 13px; color: var(--color-text-secondary); margin-top: 2px; }
+.event-list { display: flex; flex-direction: column; gap: 8px; }
+.event-card {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: var(--color-background-secondary); border-radius: var(--border-radius-lg);
+  border: 1px solid var(--color-border-tertiary); padding: 12px 14px;
+}
+.event-date {
+  min-width: 44px; text-align: center; padding: 6px 4px;
+  background: var(--color-background-primary); border-radius: var(--border-radius-md);
+  border: 1px solid var(--color-border-tertiary);
+}
+.event-date .day { font-size: 18px; font-weight: 500; color: var(--color-text-primary); line-height: 1; }
+.event-date .month-abbr { font-size: 10px; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: .5px; }
+.event-tag {
+  display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 99px;
+  font-weight: 500; margin-bottom: 4px;
+}
+.tag-uva { background: #EEEDFE; color: #3C3489; }
+.tag-regiao { background: #E1F5EE; color: #085041; }
+.tag-historia { background: #FAEEDA; color: #633806; }
+.tag-filme { background: #FBEAF0; color: #72243E; }
+.tag-brasil { background: #EAF3DE; color: #27500A; }
+.tag-gastronomia { background: #FAECE7; color: #712B13; }
+.tag-evento { background: #E6F1FB; color: #0C447C; }
+.tag-enologia { background: #F1EFE8; color: #444441; }
+.event-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); line-height: 1.3; }
+.event-desc { font-size: 12px; color: var(--color-text-secondary); margin-top: 3px; line-height: 1.5; }
+.event-movable { font-size: 11px; color: var(--color-text-secondary); background: var(--color-background-primary); border: 1px dashed var(--color-border-secondary); border-radius: 6px; padding: 4px 8px; margin-top: 6px; display: inline-block; }
+.dark .tag-uva { background: #26215C; color: #CECBF6; }
+.dark .tag-regiao { background: #04342C; color: #9FE1CB; }
+.dark .tag-historia { background: #412402; color: #FAC775; }
+.dark .tag-filme { background: #4B1528; color: #F4C0D1; }
+.dark .tag-brasil { background: #173404; color: #C0DD97; }
+.dark .tag-gastronomia { background: #4A1B0C; color: #F5C4B3; }
+.dark .tag-evento { background: #042C53; color: #B5D4F4; }
+.dark .tag-enologia { background: #2C2C2A; color: #D3D1C7; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.legend-item { font-size: 11px; display: flex; align-items: center; gap: 4px; }
+</style>
+<div class="cal-wrap" id="root"></div>
+<script>
+const isDark = document.documentElement.classList.contains('dark') || matchMedia('(prefers-color-scheme: dark)').matches;
+if (isDark) document.getElementById('root').classList.add('dark');
+
+const tags = {
+  uva: ['tag-uva','🍇 Uva/Casta'],
+  regiao: ['tag-regiao','🗺️ Região'],
+  historia: ['tag-historia','📜 História'],
+  filme: ['tag-filme','🎬 Cinema'],
+  brasil: ['tag-brasil','🇧🇷 Brasil'],
+  gastronomia: ['tag-gastronomia','🍽️ Gastronomia'],
+  evento: ['tag-evento','🏆 Evento'],
+  enologia: ['tag-enologia','🔬 Enologia'],
+};
+
+const months = [
+  {
+    name: 'Janeiro', abbr: 'JAN',
+    theme: 'Mês de começar com o pé direito — e com uma boa garrafa na mão',
+    events: [
+      { day: '27', tag: 'regiao', title: 'Dia Internacional do Vinho do Porto', desc: 'Celebração do Douro e do vinho mais famoso de Portugal. Porto Ruby, Tawny, Vintage — cada estilo é um universo.' },
+      { day: '20', tag: 'gastronomia', title: 'Dia Mundial do Queijo', desc: 'Ótima data para fazer um conteúdo de harmonização clássica: queijo e vinho. Do brie ao Grana Padano, cada um pede um parceiro diferente.' },
+      { day: 'Móvel', tag: 'enologia', title: 'Open That Bottle Night (OTBN)', desc: 'Última sábado de fevereiro — mas o planejamento começa em janeiro. Tradição criada pelos jornalistas do WSJ: abra aquela garrafa especial que você está guardando há tempo demais.', movable: 'Data móvel: último sábado de fevereiro (em 2026: 28/02)' },
+    ]
+  },
+  {
+    name: 'Fevereiro', abbr: 'FEV',
+    theme: 'Espumantes, carboneto de lúpulo e o início dos dias que pedem brancos',
+    events: [
+      { day: '01', tag: 'uva', title: 'Dia Internacional do Furmint', desc: 'A uva húngara por excelência, base do Tokaji Aszú. Uma data para falar de vinhos de sobremesa e da história da Hungria.' },
+      { day: '08', tag: 'enologia', title: 'Aniversário de Aubert de Villaine (1939)', desc: 'Lendário co-diretor da Domaine de la Romanée-Conti, nascido em 1939. A vida de quem cuida dos vinhos mais caros e cobiçados do mundo.' },
+      { day: '16', tag: 'uva', title: 'Dia Internacional da Syrah/Shiraz', desc: 'A uva de Hermitage e Barossa Valley em uma só data. Uma oportunidade de mostrar como a mesma casta muda radicalmente de acordo com o terroir.' },
+      { day: '18', tag: 'historia', title: 'Dia Mundial do Vinho (informal)', desc: 'Não é oficial, mas amplamente celebrado por produtores e apreciadores. Degustações, eventos e muito conteúdo pelo mundo.' },
+      { day: '24', tag: 'enologia', title: 'Aniversário de Michel Rolland (1947)', desc: 'O enólogo mais influente (e polêmico) do planeta. Consultor de centenas de vinícolas. Vale uma conversa sobre o papel dos flying winemakers.' },
+      { day: 'Móvel', tag: 'historia', title: 'Open That Bottle Night (OTBN)', desc: 'A data definitiva: abra sua garrafa mais especial.', movable: 'Data móvel: último sábado de fevereiro (em 2026: 28/02)' },
+    ]
+  },
+  {
+    name: 'Março', abbr: 'MAR',
+    theme: 'Primavera no hemisfério norte, colheita no sul — mês de Riesling e Nebbiolo',
+    events: [
+      { day: '03', tag: 'uva', title: 'Dia do Nebbiolo', desc: 'A uva do Barolo e Barbaresco ganha seu dia. Uma entrada para falar de Piemonte, tanino e longevidade.' },
+      { day: '08', tag: 'enologia', title: 'Dia Internacional da Mulher', desc: 'Falar de mulheres que revolucionaram o vinho: Veuve Clicquot, Lalou Bize-Leroy, Heidi Barrett. Sua data como criadora de conteúdo também cabe aqui.' },
+      { day: '10', tag: 'enologia', title: 'Aniversário de Paul Draper (1936)', desc: 'Criador dos vinhos da Ridge Vineyards. Seu Monte Bello venceu o famoso Julgamento de Paris em 2006 (replay dos 30 anos). Um ícone de Napa.' },
+      { day: '13', tag: 'uva', title: 'Dia Internacional do Riesling', desc: 'A uva nobre da Alemanha e Alsácia. Ácida, longeva, terrorrista como poucas. Mitos e verdades sobre o vinho que muita gente foge sem razão.' },
+      { day: '21', tag: 'gastronomia', title: 'Dia Mundial do Vermouth', desc: 'O aperitivo que voltou com força. Drinques, harmonizações, a história do Campari e das vermouterias italianas.' },
+    ]
+  },
+  {
+    name: 'Abril', abbr: 'ABR',
+    theme: 'Malbec, Viognier e o retorno histórico ao Douro — mês de celebrar o Novo Mundo',
+    events: [
+      { day: '12-15', tag: 'evento', title: 'Vinitaly — Verona, Itália', desc: 'A maior feira de vinhos da Itália. Ótimo para conteúdo sobre tendências do mercado europeu, variedades italianas e novos lançamentos.' },
+      { day: '17', tag: 'uva', title: 'Dia Mundial do Malbec', desc: 'Em 1853, o presidente argentino Sarmiento priorizou o desenvolvimento da vitivinicultura com o Malbec em destaque. A data mais importante da Argentina vínica.' },
+      { day: 'Móvel', tag: 'uva', title: 'Dia Internacional do Viognier', desc: 'Aromática, sedutora, única uva do Condrieu. Uma branca que merece mais atenção do público brasileiro.', movable: 'Data móvel: última sexta-feira de abril (em 2026: 24/04)' },
+      { day: '27', tag: 'uva', title: 'Dia Mundial do Marselan', desc: 'Cruzamento de Cab Sauvignon com Grenache, criado em 1961. Em ascensão na França, Espanha e América do Sul — vinho do futuro?' },
+    ]
+  },
+  {
+    name: 'Maio', abbr: 'MAI',
+    theme: 'Mês do Sauvignon Blanc, Chardonnay e do maior evento histórico do vinho moderno',
+    events: [
+      { day: 'Móvel', tag: 'uva', title: 'Dia Internacional do Sauvignon Blanc', desc: 'Crisp, aromático, versátil. Do Loire a Marlborough — a uva que dominou o mundo.', movable: 'Data móvel: primeira sexta-feira de maio (em 2026: 01/05)' },
+      { day: '22-31', tag: 'evento', title: 'Rio Wine and Food Festival (2026)', desc: 'O maior festival de vinhos do Rio de Janeiro, itinerante pela cidade. Ótima pauta de cobertura e parceria com marcas.' },
+      { day: '24', tag: 'historia', title: '50 anos do Julgamento de Paris (1976)', desc: 'Em 24 de maio de 1976, vinhos da Califórnia venceram os melhores da França em prova cega. Uma das datas mais importantes da história do vinho moderno. 2026 é o jubileu de ouro!', },
+      { day: 'Móvel', tag: 'uva', title: 'Dia Internacional do Chardonnay', desc: 'A rainha de Burgundy e de tantas outras regiões. Oaked vs. unoaked — a discussão nunca acaba.', movable: 'Data móvel: quinta-feira antes do Memorial Day nos EUA (em 2026: 21/05)' },
+      { day: '26', tag: 'uva', title: 'Dia do Pinot Grigio', desc: 'A uva que faz a alegria dos aperitivos italianos. Pinot Grigio vs. Pinot Gris — mesma uva, mundos diferentes.' },
+      { day: '25', tag: 'historia', title: 'Dia Internacional do Vinho', desc: 'Data ampla para celebrar e educar. Uma das mais engajadas do setor em redes sociais.' },
+      { day: '24', tag: 'filme', title: 'Aniversário de Bottle Shock (Sundance 2008)', desc: 'O filme baseado no Julgamento de Paris. Com Alan Rickman e Chris Pine. Conexão perfeita com o aniversário dos 50 anos da prova histórica.' },
+    ]
+  },
+  {
+    name: 'Junho', abbr: 'JUN',
+    theme: 'O mês nacional do vinho no Brasil — e dos espumantes que celebram o inverno gaúcho',
+    events: [
+      { day: 'Móvel', tag: 'brasil', title: 'Dia Nacional do Vinho (Brasil)', desc: 'A data mais importante do vinho brasileiro. Amplamente celebrada com eventos, feiras e degustações por todo o país.', movable: 'Data móvel: primeiro domingo de junho (em 2026: 07/06)' },
+      { day: '03', tag: 'enologia', title: 'Dia Internacional do Sommelier', desc: 'Uma data para homenagear a profissão, contar histórias de sommeliers incríveis e falar sobre o que essa carreira exige.' },
+      { day: 'Móvel', tag: 'brasil', title: 'Fenavinho — Bento Gonçalves (RS)', desc: 'Uma das festas mais tradicionais do Brasil, resgatando a imigração italiana e a cultura do vinho gaúcho.', movable: 'Geralmente ocorre entre maio e junho em Bento Gonçalves' },
+      { day: 'Móvel', tag: 'uva', title: 'Dia Mundial do Verdejo', desc: 'A uva branca de Rueda, Espanha. Fresca, herbácea, mineral — uma descoberta para os fãs de brancos complexos.', movable: 'Data móvel: segunda sexta-feira de junho (em 2026: 12/06)' },
+      { day: '18', tag: 'enologia', title: 'Aniversário de Robert Mondavi (1913)', desc: 'O homem que colocou Napa Valley no mapa mundial. Nascido em 18 de junho de 1913. Uma figura que transformou a indústria americana e inspirou o Novo Mundo.' },
+      { day: '25-27', tag: 'evento', title: 'Brazil Wine Challenge — Bento Gonçalves (2026)', desc: 'Única competição no Brasil sancionada pela OIV. Um dos momentos mais importantes para o vinho nacional.' },
+      { day: '25-27', tag: 'evento', title: 'Expovitis Brasil — Brasília (2026)', desc: 'Feira focada em vinhos brasileiros, com presença de regiões emergentes além do Sul.' },
+    ]
+  },
+  {
+    name: 'Julho', abbr: 'JUL',
+    theme: 'Inverno no Brasil e verão nas vinhas do norte — mês de espumantes e terroir',
+    events: [
+      { day: 'Móvel', tag: 'uva', title: 'Dia Internacional do Shiraz', desc: 'A versão australiana da Syrah ganha sua própria data. Barossa, McLaren Vale — a casta que define o vinho austral.', movable: 'Data móvel: quarta quinta-feira de julho (em 2026: 23/07)' },
+      { day: 'Móvel', tag: 'evento', title: 'Semana Internacional do Espumante', desc: 'Uma semana inteira dedicada às borbulhas. Do Champagne ao Cava, do Prosecco ao Crémant e ao espumante gaúcho.', movable: 'Data móvel: última semana de junho / início de julho' },
+      { day: '26', tag: 'historia', title: 'Aniversário de Dom Pérignon (1638)', desc: 'O monge beneditino que "descobriu" o Champagne nasceu em 26 de julho de 1638. Uma história cheia de mitos que vale desmistificar.' },
+    ]
+  },
+  {
+    name: 'Agosto', abbr: 'AGO',
+    theme: 'Pinot Noir, Albariño e o vinho que muda com o auge do inverno brasileiro',
+    events: [
+      { day: '01-05', tag: 'evento', title: 'Festival do Albariño — Cambados, Espanha', desc: 'O segundo festival de vinho mais antigo da Espanha. Uma porta de entrada para falar de Rías Baixas e dos brancos atlânticos.' },
+      { day: '04', tag: 'gastronomia', title: 'Dia Internacional do Vinho Branco', desc: 'Branco não é só aperitivo — uma oportunidade para desmistificar e mostrar a complexidade dos brancos de guarda.' },
+      { day: 'Móvel', tag: 'uva', title: 'Dia Internacional do Pinot Noir', desc: 'A uva mais difícil e mais amada do mundo. Burgundy, Oregon, Santa Bárbara — cada lugar conta uma história diferente.', movable: 'Data móvel: terceira quinta-feira de agosto (em 2026: 20/08)' },
+      { day: 'Móvel', tag: 'uva', title: 'Dia Internacional do Cabernet Sauvignon', desc: 'Preâmbulo do outono no hemisfério norte — celebrando a uva mais plantada do mundo.', movable: 'Data móvel: primeira quinta-feira de setembro (em 2026: 03/09) — alguns celebram no último dia de agosto' },
+    ]
+  },
+  {
+    name: 'Setembro', abbr: 'SET',
+    theme: 'Colheita, Grenache e o Dia do Vinho Chileno — primavera no vinhedo brasileiro',
+    events: [
+      { day: '04', tag: 'regiao', title: 'Dia do Vinho Chileno', desc: 'Em referência à primeira menção histórica à produção vínica no Chile, em 1545. Carménère, Cabernet, terroir costeiro — o Chile está em ascensão.' },
+      { day: '10', tag: 'regiao', title: 'Dia Nacional do Vinho do Porto', desc: 'Outra data para o Porto — desta vez focada nos rituais locais, no Douro e nas quintas.' },
+      { day: 'Móvel', tag: 'uva', title: 'Dia Internacional do Grenache/Garnacha', desc: 'A uva mais versátil do Mediterrâneo. Do Châteauneuf-du-Pape ao Priorat, do rosé provençal ao vinho de guarda.', movable: 'Data móvel: terceira sexta-feira de setembro (em 2026: 18/09)' },
+      { day: 'Móvel', tag: 'evento', title: 'Avaliação Nacional de Vinhos — Bento Gonçalves', desc: 'O maior evento de avaliação de vinhos da América Latina, com mais de mil participantes. Degustação às cegas.', movable: 'Geralmente realizado entre setembro e outubro' },
+      { day: 'Móvel', tag: 'filme', title: 'Aniversário do Sideways (estreia Toronto, 2004)', desc: 'O filme que destruiu as vendas de Merlot e fez o Pinot Noir virar febre. Estreou no Festival de Toronto em 13 de setembro de 2004.', movable: 'Data de estreia: 13/09/2004 no TIFF; lançamento EUA: 22/10/2004' },
+    ]
+  },
+  {
+    name: 'Outubro', abbr: 'OUT',
+    theme: 'Beaujolais Nouveau no forno, Champagne no calendário e o outono europeu',
+    events: [
+      { day: 'Móvel', tag: 'uva', title: 'Dia Mundial do Champagne', desc: 'A mais nobre das bolhas. Uma data para mergulhar em terroir, método tradicional e os grandes nomes de Reims e Épernay.', movable: 'Data móvel: quarta sexta-feira de outubro (em 2026: 23/10)' },
+      { day: 'Móvel', tag: 'uva', title: 'Dia Internacional do Carignan', desc: 'Uma uva renegada que está de volta com força, especialmente nos vinhos do Languedoc e da Espanha.', movable: 'Data móvel: última quinta-feira de outubro (em 2026: 29/10)' },
+      { day: '05', tag: 'uva', title: 'Dia Mundial do Vranec', desc: 'A casta mais importante da Macedônia do Norte e Montenegro. Para quem quer falar de vinhos que poucos conhecem.' },
+      { day: '01-03', tag: 'evento', title: 'ProWine São Paulo', desc: 'Feira profissional de referência no Brasil. Ótima para cobertura e networking com importadores e produtores.' },
+    ]
+  },
+  {
+    name: 'Novembro', abbr: 'NOV',
+    theme: 'Beaujolais Nouveau, Tempranillo e o enoturismo ganham destaque',
+    events: [
+      { day: '01', tag: 'uva', title: 'Dia Internacional do Xinomavro', desc: 'A uva tânica grega que rivaliza com o Nebbiolo. Naoussa, Amyndeon — o vinho grego existe e é incrível.' },
+      { day: '07', tag: 'uva', title: 'Dia Internacional do Merlot', desc: 'A uva que Sideways humilhou mas que o Pétrus transformou em lenda. Uma data para reabilitar a casta.' },
+      { day: 'Móvel', tag: 'uva', title: 'Dia Internacional do Tempranillo', desc: 'A grande uva espanhola. Rioja, Ribera del Duero — um universo de estilos e histórias.', movable: 'Data móvel: segunda quinta-feira de novembro (em 2026: 12/11)' },
+      { day: 'Móvel', tag: 'regiao', title: 'Dia Mundial do Enoturismo', desc: 'Uma data criada para incentivar as viagens a regiões vinícolas. Pautão para falar de destinos e experiências.', movable: 'Data móvel: segundo domingo de novembro (em 2026: 08/11)' },
+      { day: 'Móvel', tag: 'historia', title: 'Beaujolais Nouveau Day', desc: 'O lançamento do vinho mais jovem da França vira festa global. Toda terceira quinta-feira de novembro — o rito de passagem do Gamay.', movable: 'Data móvel: terceira quinta-feira de novembro (em 2026: 19/11)' },
+      { day: 'Móvel', tag: 'filme', title: 'Aniversário do SOMM (2012)', desc: 'O documentário que mostrou o mundo dos Master Sommeliers para o grande público. Lançado em novembro de 2012 no AFI Fest.' },
+      { day: '13', tag: 'enologia', title: 'Dia Internacional do Tempranillo', desc: 'Rioja, Toro, Ribera del Duero — a personalidade ibérica em uma taça.' },
+    ]
+  },
+  {
+    name: 'Dezembro', abbr: 'DEZ',
+    theme: 'Fim de ano, Champagne, Merlot e o brinde que fecha o ciclo',
+    events: [
+      { day: '07', tag: 'uva', title: 'Dia Internacional do Merlot', desc: 'A data de dezembro rivaliza com a de novembro — mais uma oportunidade para a reabilitação dessa uva maltratada pelo cinema.' },
+      { day: '24', tag: 'enologia', title: 'Aniversário de Michel Rolland (1947)', desc: 'O "vinho-consultor" mais famoso e polêmico do mundo. 25 de dezembro é o Natal — mas a véspera é dele.' },
+      { day: '30', tag: 'uva', title: 'Dia Internacional do Carignan (alternativo)', desc: 'Alguns grupos celebram o Carignan no final do ano também, como um vinho de transição para o próximo ciclo.' },
+      { day: '25', tag: 'gastronomia', title: 'Natal — Harmonizações de Festa', desc: 'A maior data gastronômica do ano. Peru, salmão, panetone, rabanada — um universo de harmonizações para explorar.' },
+      { day: '31', tag: 'historia', title: 'Réveillon — Champagne e espumantes', desc: 'A data que mais vende espumante no mundo. Uma oportunidade de educar: método tradicional vs. charmat, Champagne vs. Cava vs. espumante brasileiro.' },
+    ]
+  }
+];
+
+function tagHTML(type) {
+  const [cls, label] = tags[type] || ['tag-enologia','🔬 Geral'];
+  return `<span class="event-tag ${cls}">${label}</span>`;
+}
+
+function renderMonth(idx) {
+  const m = months[idx];
+  let html = `<div class="month-header"><h2>${m.name}</h2><p>${m.theme}</p></div>`;
+  html += `<div class="event-list">`;
+  for (const e of m.events) {
+    html += `<div class="event-card">
+      <div class="event-date"><div class="day">${e.day.length > 4 ? '—' : e.day}</div><div class="month-abbr">${m.abbr}</div></div>
+      <div>
+        ${tagHTML(e.tag)}
+        <div class="event-title">${e.title}</div>
+        <div class="event-desc">${e.desc}</div>
+        ${e.movable ? `<div class="event-movable">📅 ${e.movable}</div>` : ''}
+      </div>
+    </div>`;
+  }
+  html += `</div>`;
+  return html;
+}
+
+let currentMonth = 0;
+function render() {
+  const root = document.getElementById('root');
+  let tabs = `<div class="month-tabs">`;
+  months.forEach((m, i) => {
+    tabs += `<button class="${i===currentMonth?'active':''}" onclick="selectMonth(${i})">${m.abbr}</button>`;
+  });
+  tabs += `</div>`;
+  
+  const legend = `<div class="legend">
+    ${Object.entries(tags).map(([k,[cls,l]])=>`<div class="legend-item"><span class="event-tag ${cls}" style="margin-bottom:0">${l}</span></div>`).join('')}
+  </div>`;
+  
+  root.innerHTML = tabs + legend + renderMonth(currentMonth);
+}
+
+function selectMonth(i) { currentMonth = i; render(); }
+render();
+</script>
